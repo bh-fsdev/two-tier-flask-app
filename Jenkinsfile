@@ -14,19 +14,21 @@ pipeline{
         }
         stage("Test"){
             steps{
-                sh "Developer Testing this"
+                sh "echo 'Developer Testing this'"
             }
         }
         stage("Push to Docker Hub"){
             steps{
               withCredentials([usernamePassword(
-                credentialsId: "dockerHubCreds",
-                passwordVar: "dockerHubPass",
-                usernameVar: "dockerHubUser")]){
-                  sh "docker login -u ${env.dockerHubUser} -p ${env.dockerHubPass} "
-                  sh "docker image tag two-tier-flask-app${env.dockerHubUser}/two-tier-flask-app"
-                  sh "docker push ${env.dockerHubUser}/two-tier-flask-app:latest"
-              }
+                  credentialsId: "dockerHubCreds",
+                  passwordVariable: "dockerHubPass",
+                  usernameVariable: "dockerHubUser")]) {
+                  sh '''
+                  echo "$dockerHubPass" | docker login -u "$dockerHubUser" --password-stdin
+                  docker image tag two-tier-flask-app "$dockerHubUser/two-tier-flask-app:latest"
+                  docker push "$dockerHubUser/two-tier-flask-app:latest"
+                  '''
+                 }
             }
         }
         stage("Deploy"){
